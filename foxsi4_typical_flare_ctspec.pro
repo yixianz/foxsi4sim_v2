@@ -1,7 +1,7 @@
 Pro foxsi4_typical_flare_ctspec, pos = pos, large_flare = large_flare
 
 ; Purpose:
-; FOXSI-4 count spectrum simulation for different positions
+; FOXSI-4 count spectrum simulation for typical flares from scaling laws
 ; 
 ; Notes:
 ; In the plot, numbers at the top left corner show total count rates and pileup fractions (assuming photons are spread over 
