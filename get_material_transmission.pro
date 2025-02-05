@@ -18,7 +18,7 @@ Function get_material_transmission, filename, thickness_um, energy_arr = energy_
 ; Data structure that consists of energies (in keV) and transmission
 ;
 ; Examples:
-; result = get_material_transmission('material_data/al_atten_len.dat', 100)
+; result = get_material_transmission('material_data/al_att_len.txt', 100)
 ;
 ; History:
 ; Oct 2023, created by Y. Zhang

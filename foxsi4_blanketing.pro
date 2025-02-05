@@ -46,7 +46,7 @@ For i = 0, n_elements(files)-1 do begin
 Endfor
 
 If keyword_set(plot) then plot, energy_arr, blanket_trans,  xtitle = 'Energy (keV)', ytitle = 'Transmission', charsize = 1.4
-
+;stop
 result = create_struct('energy_keV', energy_arr, 'transmission', blanket_trans)
 return, result
 

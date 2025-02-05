@@ -1,4 +1,5 @@
-Function foxsi4_deteff, energy_arr = energy_arr, cdte = cdte, cmos = cmos, timepix = timepix, elec_coverage = elec_coverage, plot = plot
+Function foxsi4_deteff, energy_arr = energy_arr, cdte = cdte, cmos = cmos, timepix = timepix, elec_coverage = elec_coverage, plot = plot, $
+            let_file = let_file
 
 ; Purpose:
 ; Get FOXSI-4 detector efficiency
@@ -8,12 +9,12 @@ Function foxsi4_deteff, energy_arr = energy_arr, cdte = cdte, cmos = cmos, timep
 ; For CdTe:
 ;    Detector thickness, electrodes thickness and coverage, and the efficiency curve at low energy threshold are taken into account.
 ;    The electrode coverage is not uniform accross the detector (0.5 for finest pitch, 0.375 for the second finest pitch, and 0.3
-;    for the coarsest pitch); here 0.5 is used - differences when using 0.3 are very small. The low energy threshold 
+;    for the coarsest pitch); here the average value of 0.36 is used for default - differences when using 0.5 are very small. The low energy threshold 
 ;    efficiency curve is generated based on Fe-55 threshold scan data measured by Nagasawa san (see Ishikawa et al 2016
 ;    for method https://arxiv.org/abs/1606.03887).
-; For CMOS,
-;    Use FOXSI-3 prefilter design. Need to update.
-; For Timepix,
+; For CMOS:
+;    Only consider photoabsorption of Si.
+; For Timepix:
 ;    This is a rough estimate based on Timepix thickness but with FOXSI-3 CdTe detector electrodes. 
 ;    Low energy threshold efficiency not implemented.
 ;    Need to update.
@@ -25,23 +26,26 @@ Function foxsi4_deteff, energy_arr = energy_arr, cdte = cdte, cmos = cmos, timep
 ; timepix: set this to 1 to get efficiency for the Timepix3 detector
 ; elec_coverage: electrode coverage (fraction). If not set, use 0.5 for CdTe and Timepix. Ignored for CMOS.
 ; plot: set this to 1 to efficiency vs energy
+; let_file: energy vs efficiency file for different low energy thresholds
 ; 
 ; Outputs:
 ; Data structure that consists of energies in keV and efficiency.
 ; 
 ; Examples:
-; deteff = foxsi4_deteff(energy_arr = indgen(30)+1.0, cdte = 1, plot = 1)
+; deteff = foxsi4_deteff(energy_arr = indgen(150)*0.2+1.0, cdte = 1, plot = 1)
 ; deteff = foxsi4_deteff(cmos = 1, plot = 1)
 ; deteff = foxsi4_deteff(timepix = 1, elec_coverage = 0.4, plot = 1)
 ;
 ; History:
 ; Oct 2023, created by Y. Zhang
+; Apr 2024, add effiency files for different low energy thresholds
 
 Default, energy_arr, indgen(300)*0.1+1.0
 Default, cdte, 0
 Default, cmos, 0
 Default, timepix, 0
 Default, plot, 0
+Default, let_file, 'vth_5.csv'
 
 db_dir = 'material_data/'
 
@@ -58,10 +62,10 @@ If cdte eq 1 then begin
   pt_thick_um = 0.03
   au_thick_um = 0.08
   ni_thick_um = 1.
-  If not keyword_set(elec_coverage) then elec_coverage = 0.5   ; electrode coverage
+  If not keyword_set(elec_coverage) then elec_coverage = 0.36   ; electrode coverage
   pt_trans = get_material_transmission(db_dir + 'pt_att_len.txt', pt_thick_um, energy_arr = energy_arr)
   au_trans = get_material_transmission(db_dir + 'au_att_len.txt', au_thick_um, energy_arr = energy_arr)
-  ni_trans = get_material_transmission(db_dir + 'ni_att_len.txt', pt_thick_um, energy_arr = energy_arr)
+  ni_trans = get_material_transmission(db_dir + 'ni_att_len.txt', ni_thick_um, energy_arr = energy_arr)
   elec_trans = pt_trans.transmission * au_trans.transmission * ni_trans.transmission * elec_coverage + (1 - elec_coverage)
   
   ; absorption of CdTe
@@ -72,7 +76,13 @@ If cdte eq 1 then begin
   ; low energy threshold 
   ; see Ishikawa et al 2016 for method (https://arxiv.org/abs/1606.03887)
   ; using data and fit parameters from Nagasawa san
-  let = 0.5*(erf((energy_arr/0.732-5)/sqrt(2)/2.769)+1)
+  ;let = 0.5*(erf((energy_arr/0.6865-5)/sqrt(2)/2.769)+1)
+  
+  ; load the low energy threshold efficiency file
+  path = '/Users/zyx/Documents/foxsi/foxsi4sim_v2/cdte_let_eff/'
+  filename = path + let_file
+  data = read_csv(filename) 
+  let = interpol(data.field2, data.field1, energy_arr)
 
   det_eff = elec_trans * cdte_absor * let
 
@@ -81,21 +91,14 @@ Endif
 ; -----------------------------------------------------------------------------------------------------------------------------------
 ; CMOS detector
 If cmos eq 1 then begin
-  
-  ; transmission of pre-filter
-  prefilter_al = 0.45
-  prefilter_poly = 2
-  al_trans = get_material_transmission(db_dir + 'al_att_len.txt', prefilter_al, energy_arr = energy_arr)
-  poly_trans = get_material_transmission(db_dir + 'polymide_att_len.txt', prefilter_poly, energy_arr = energy_arr)
-  prefilter_trans = al_trans.transmission * poly_trans.transmission
-  
+    
   ; absorption of Si
   si_thick_um = 25
   si_trans = get_material_transmission(db_dir + 'si_att_len.txt', si_thick_um, energy_arr = energy_arr)
   si_absor = 1 - si_trans.transmission
   
-  det_eff = prefilter_trans*si_absor
-  
+  det_eff = si_absor
+
 Endif
 
 ; -----------------------------------------------------------------------------------------------------------------------------------
@@ -124,6 +127,7 @@ Endif
 
 If keyword_set(plot) then plot, energy_arr, det_eff, xtitle = 'Energy (keV)', ytitle = 'Efficiency', charsize = 1.4
 eff = create_struct("energy_keV", energy_arr, "efficiency", det_eff)
+
 return, eff
 
 End

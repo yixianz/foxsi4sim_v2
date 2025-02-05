@@ -44,7 +44,8 @@ Endif
 
 ; Effective area for heritage 10-shell optics
 If heritage eq 1 then begin
-  filename = './optics_data/FOXSI2_Module_X-6_EA_pan.txt'
+  ;filename = './optics_data/FOXSI2_Module_X-6_EA_pan.txt'
+  filename = './optics_data/FOXSI3_Module_X-7_EA_pan.txt'
   energy = [4.5,  5.5,  6.5,  7.5,  8.5,  9.5, 11. , 13. , 15. , 17. , 19. , 22.5, 27.5]; all effarea use same energy bins
   data = read_ascii(filename, DATA_START=4, DELIMITER=",") 
   eff_area = data.field01[5,*]

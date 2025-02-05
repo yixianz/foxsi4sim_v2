@@ -1,5 +1,5 @@
 Function foxsi4_ct_spec, energy_arr, ph_flux, pos = pos, energy_bin = energy_bin, energy_resolution = energy_resolution, $
-  erange = erange, att_wheel = att_wheel, counting_stat = counting_stat, int_time = int_time, plot = plot
+  erange = erange, att_wheel = att_wheel, counting_stat = counting_stat, int_time = int_time, plot = plot, let_file = let_file
   
 ; Purpose: generate FOXSI-4 count spectrum for a given photon spectrum
 ; 
@@ -23,19 +23,21 @@ Function foxsi4_ct_spec, energy_arr, ph_flux, pos = pos, energy_bin = energy_bin
 ; counting_stat: set this to 1 to add counting statistics
 ; int_time: integration time in seconds (only used when counting_stat is set)
 ; plot: set this to 1 to plot count flux vs energy
+; let_file:
 ; 
 ; Outputs:
 ; Data structure that consists of energy array (keV), count fluxes (counts/s/keV), and total count rate (counts/s)
 ; 
 ; Example 1:
-; phspec = typical_flare_phspec(fgoes = 1e-5)
+; phspec = typical_flare_phspec(fgoes = 1e-5)  ; M1 class
 ; ctspec = foxsi4_ct_spec(phspec.energy_keV, phspec.phflux, pos=2, plot = 1)
 ; Example 2:
-; phspec = typical_flare_phspec(fgoes = 5e-5)
+; phspec = typical_flare_phspec(fgoes = 5e-5)  ; M5 class
 ; ctspec = foxsi4_ct_spec(phspec.energy_keV, phspec.phflux, pos=3, att_wheel=1, counting_stat = 1, int_time = 30.,  plot = 1)
 ; 
 ; History:
 ; Oct 2023, created by Y. Zhang
+; Apr 8 2024, added CdTe let file option
 
 
 Default, energy_bin, 0.8
@@ -48,7 +50,7 @@ Default, plot, 0
 ; Detector energy resolution
 If keyword_set(energy_resolution) eq 0 then begin
   If pos eq 0 or 1 then energy_resolution = 0.2   ;cmos
-  If pos eq 2 or 3 or 4 or 5 then energy_resolution = 1.   ;cdte
+  If pos eq 2 or pos eq 3 or pos eq 4 or pos eq 5 then energy_resolution = 1.  ;cdte
   If pos eq 6 then energy_resolution = 5.4    ;timepix
 Endif
 
@@ -63,7 +65,7 @@ If pos eq 0 then print, "Calculating count spectrum for position 0: MSFC hi-res 
 print, "Detector energy resolution:", energy_resolution, " keV"
 
 ; Calculate count flux
-resp = foxsi4_resp_diag(pos = pos, energy_arr = energy_arr, att_wheel = att_wheel)
+resp = foxsi4_resp_diag(pos = pos, energy_arr = energy_arr, att_wheel = att_wheel, let_file = let_file)
 ct_flux = ph_flux * resp.eff_area_cm2
 ;plot, energy_arr, ct_flux,/xlog,/ylog, xr = [3,30], yr = [1,1e5]
 

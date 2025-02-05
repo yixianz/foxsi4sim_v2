@@ -9,7 +9,7 @@ Pro foxsi4_ospex_fit_example
 ; History:
 ; Oct 2023, Y.Zhang
 
-pos = 2    ; position number
+pos = 5    ; position number
 att_wheel = 0    ; attenuator wheel is not inserted
 int_time = 10.   ; integration time
 energy_bin = 0.5    ; energy bin size for spectrum

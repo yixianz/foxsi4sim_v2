@@ -16,13 +16,13 @@ Pro foxsi4_real_85flares, pos = pos, cdte_thr = cdte_thr, bright_ind = bright_in
 ;
 ; Examples:
 ; foxsi4_real_85flares, pos = 5, cdte_thr = 8000
-; foxsi4_real_85flares, pos = 3, bright_ind = [0,1,2,3,4,6,7,8,9,10,11,14,16,20,22,24]
+; foxsi4_real_85flares, pos = 3, bright_ind = [0,1,2,3,4,7,8,10,11,14,20,24]
 ;
 ; History:
 ; Oct 2023, created by Y. Zhang 
 
 Default, pos, 2
-Default, bright_ind, [0,1,2,3,4,7,8,10,11,14,20,24]
+Default, bright_ind, [0,1,2,3,4,6,7,8,9,10,11,14,16,20,22,24]
 
 fgoes_range = [1e-6, 1e-4] ; only select flares that are C or M class
 
