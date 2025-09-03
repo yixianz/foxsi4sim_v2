@@ -5,8 +5,9 @@ Function real_c3flare_phspec, en_edges = en_edges, footpoint1 = footpoint1, foot
 ; 
 ; Notes:
 ; This is the flare from Simoes et al 2015 (https://www.aanda.org/articles/aa/abs/2015/05/aa24795-14/aa24795-14.html)
-; Use f_vth + thick2 model. 
-; Default is to calculate for the whole flare region. Set keywords to calculated for one of the footpoints or looptop region only.
+; Spectral parameters are copied from foxsi4sim (original fit results are not available here).
+; Use f_vth + thick2 model for all sources.
+; Default is to calculate for the whole flare region. Use keywords to calculate for a specific region.
 ;
 ; Keywords:
 ; en_edges: 1d array of enegy bin edges
@@ -29,6 +30,7 @@ Function real_c3flare_phspec, en_edges = en_edges, footpoint1 = footpoint1, foot
 ;
 ; History:
 ; Oct 2023, created by Y. Zhang
+; Feb 2025, updated documentation by Y. Zhang
 
 Default, en_edges, indgen(4000)*0.01+1
 
