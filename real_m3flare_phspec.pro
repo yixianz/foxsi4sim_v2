@@ -5,7 +5,8 @@ Function real_m3flare_phspec, en_edges = en_edges, footpoint = footpoint, loopto
 ; 
 ; Notes:
 ; This is flare C from Simoes and Kontar 2013 (https://www.aanda.org/articles/aa/full_html/2013/03/aa20304-12/aa20304-12.html)
-; Parameters are read from OSPEX .fits files. Use f_vth + thick2 model. 
+; Parameters are read from OSPEX .fits files. 
+; Use f_vth + thick2 model for the whole flare / footpoint region. Use f_vth + thin2 model for the looptop region.
 ; Default is to simulate for the whole flare region. Set keywords to simulate for the footpoint/looptop region only.
 ; 
 ; Keywords:
@@ -28,6 +29,7 @@ Function real_m3flare_phspec, en_edges = en_edges, footpoint = footpoint, loopto
 ;
 ; History:
 ; Oct 2023, created by Y. Zhang
+; Feb 2025, updated looptop source calculation by Y. Zhang
 
 Default, en_edges, indgen(4000)*0.01+1
 
@@ -51,7 +53,11 @@ param = res.SPEX_SUMM_PARAMS
 
 ; Use isothermal + thick-target model
 phflux_th = f_vth(en_edges, param[0:2])    ; thermal
-phflux_nonth = f_thick2(emean, param[3:-1])    ; non-thermal
+If keyword_set(looptop) then begin
+  phflux_nonth = f_thin2(emean, param[3:-1])    ; non-thermal thin-target model for looptop region
+Endif else begin
+  phflux_nonth = f_thick2(emean, param[3:-1])    ; non-thermal thick-target model for full-flare/footpoint region
+Endelse
 phflux = phflux_th + phflux_nonth    ; total = thermal + non-thermal
 
 If keyword_set(plot) then begin

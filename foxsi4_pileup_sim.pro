@@ -42,7 +42,7 @@ Pro foxsi4_pileup_sim, goesflux = goesflux, pos = pos, att_wheel = att_wheel, n_
 Default, goesflux, 1e-5   ; M1 class
 Default, pos, 2
 Default, att_wheel, 0
-Default, n_events, 300000
+Default, n_events, 500000
 
 If pos ne 2 and pos ne 3 and pos ne 4 and pos ne 5 then begin
   print, "Error: position must be 2, 3, 4 or 5 (CdTe strip detectors)"
@@ -51,6 +51,7 @@ Endif
 
 en_edges = indgen(2000)*0.02+1
 phspec = typical_flare_phspec(fgoes = goesflux, en_edges = en_edges)
+;phspec = real_m3flare_phspec(en_edges = en_edges)
 phflux = phspec.phflux
 print, "parameters: EM_49/T_kev/f35/delta)", phspec.parameters[0]
 

@@ -1,4 +1,4 @@
-Function foxsi4_resp_diag, pos = pos, energy_arr = energy_arr, att_wheel = att_wheel, plot = plot, let_file = let_file
+Function foxsi4_resp_diag, pos = pos, energy_arr = energy_arr, att_wheel = att_wheel, plot = plot, let_file = let_file, new_att = new_att
 
 ; Purpose:
 ; Calculate FOXSI-4 instrument response (1D diagonol elements) as a function of energy for each telescope (Units: cm^2)
@@ -20,7 +20,8 @@ Function foxsi4_resp_diag, pos = pos, energy_arr = energy_arr, att_wheel = att_w
 ; att_wheel: set this to 1 to insert the attenutor wheel (only have effects on CdTe strip detectors)
 ; plot: set this to 1 to plot total effective area vs energy
 ; let_file: energy vs efficiency file for different CdTe detector low energy thresholds
-;
+; new_att: set this to 1 to use new attenuator thickness for FOXSI-5 (less attenuation at Positions 2 & 5)
+; 
 ; Outputs:
 ; Data structure that consists of energy array (keV) and effective area (cm2)
 ;
@@ -32,16 +33,17 @@ Function foxsi4_resp_diag, pos = pos, energy_arr = energy_arr, att_wheel = att_w
 ; History:
 ; Oct 2023, created by Y. Zhang
 ; Apr 8 2024, add options for CdTe let efficiency file
+; ?? 2025, include thin mylar at Positions 3 and 5
+; Aug 2025, add options to select new attenuator thickness for FOXSI-5 
 
 Default, energy_arr, findgen(4000)*0.01+1
 Default, att_wheel, 0
 Default, plot, 0
+Default, new_att, 0
 
 ; thickness of the uniform Al attenuator attached to the detector (only needed for Position 2 and 4)
-;al_thickness = [0,0,380,0,113,0,0]
-al_thickness = [0,0,0.015,0,0.005,0,0]*25400
+If new_att eq 0 then al_thickness = [0,0,0.015,0,0.005,0,0]*25400 else al_thickness = [0,0,0.007,0,0.002,0,0]*25400
 ; thicknesses of the Al attenuator on the insertable wheel (only needed for CdTe strip detectors)
-;al_att_wheel = [0,0,390,145,190,335,0]
 al_att_wheel = [0,0,0.015,0.006,0.007,0.013,0]*25400
 
 If total(pos eq findgen(7)) ne 1 then begin
@@ -53,14 +55,10 @@ Endif
 ; Position 0: MSFC high-resolution optics + CMOS
 If pos eq 0 then begin
   optics = foxsi4_optics_effarea(energy_arr = energy_arr, msfc_hi_res = 1)     ; optics effective area 
-  colli_trans = 0.4 ; optics collimator
-  ; optics filter: 5um polymide C22H10N2O5 + 150 nm Al
-  optf_poly = get_material_transmission('material_data/polymide_att_len.txt', 5., energy_arr = energy_arr)
-  optf_al = get_material_transmission('material_data/al_att_len.txt', 0.15, energy_arr = energy_arr)
-  optf_trans = optf_poly.transmission * optf_al.transmission
-  optics.eff_area_cm2 = optics.eff_area_cm2 * colli_trans * optf_trans
+  colli_trans = 0.42 ; pre-collimator transmission
+  obf = foxsi4_obf(energy_arr = energy_arr)    ; OBF transmission
+  optics.eff_area_cm2 = optics.eff_area_cm2 * colli_trans * obf.transmission
   blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
-  ;blanketing= foxsi4_blanketing(energy_arr = energy_arr, kapton_um = 50.8) 
   atten = foxsi4_cmos_prefilter(energy_arr = energy_arr,cmos_pos = 0)    ; prefilter transmission
   detector = foxsi4_deteff(energy_arr = energy_arr, cmos = 1)      ; detector efficiency
 Endif
@@ -69,14 +67,13 @@ Endif
 If pos eq 1 then begin
   optics = foxsi4_optics_effarea(energy_arr = energy_arr, nagoya_sxr = 1)     ; optics effective area (this already includes collimator and optics filters)
   blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
-  ;blanketing= foxsi4_blanketing(energy_arr = energy_arr, kapton_um = 50.8) 
   atten = foxsi4_cmos_prefilter(energy_arr = energy_arr,cmos_pos = 1)     ; prefilter transmission
   detector = foxsi4_deteff(energy_arr = energy_arr, cmos = 1)      ; detector efficiency
 Endif
 
 ; Position 2: 10-shell optics + blanketing + uniform Al attenuator + CdTe
 If pos eq 2 then begin
-  optics = foxsi4_optics_effarea(energy_arr = energy_arr, heritage = 1)     ; optics effective area
+  optics = foxsi4_optics_effarea(energy_arr = energy_arr, heritage = 1, heri_module=7)     ; optics effective area
   blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
   al_um = al_thickness[pos]
   If att_wheel eq 1 then al_um = al_um + al_att_wheel[pos]
@@ -87,7 +84,7 @@ Endif
 ; Position 3: MSFC high-resolution optics + blanketing + pixelated attenuator + CdTe
 If pos eq 3 then begin
   optics = foxsi4_optics_effarea(energy_arr = energy_arr, msfc_hi_res = 1)     ; optics effective area
-  blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
+  blanketing= foxsi4_blanketing(energy_arr = energy_arr, fp_mylar=1)      ; blanketing transmission with thin FP mylar
   al_um = al_thickness[pos]
   If att_wheel eq 1 then al_um = al_um + al_att_wheel[pos]
   atten = foxsi4_attenuator(energy_arr = energy_arr, al_um = al_um, pixelated_att = 1)      ; attenuator transmission
@@ -106,8 +103,8 @@ Endif
 
 ; Position 5: 10-shell optics + blanketing + pixelated attenuator + CdTe
 If pos eq 5 then begin
-  optics = foxsi4_optics_effarea(energy_arr = energy_arr, heritage = 1)     ; optics effective area
-  blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
+  optics = foxsi4_optics_effarea(energy_arr = energy_arr, heritage = 1, heri_module=8)     ; optics effective area
+  blanketing= foxsi4_blanketing(energy_arr = energy_arr, fp_mylar=1)      ; blanketing transmission with thin FP mylar
   al_um = al_thickness[pos]
   If att_wheel eq 1 then al_um = al_um + al_att_wheel[pos]
   atten = foxsi4_attenuator(energy_arr = energy_arr, al_um = al_um, pixelated_att = 1)      ; attenuator transmission
@@ -117,7 +114,7 @@ Endif
 ; Position 6: MSFC high-resolution optics + blanketing + Timepix
 If pos eq 6 then begin
   optics = foxsi4_optics_effarea(energy_arr = energy_arr, msfc_hi_res = 1)     ; optics effective area
-  blanketing= foxsi4_blanketing(energy_arr = energy_arr)      ; blanketing transmission
+  blanketing= foxsi4_blanketing(energy_arr = energy_arr, fp_mylar=1)      ; blanketing transmission with thin FP mylar
   al_um = al_thickness[pos]
   If att_wheel eq 1 then al_um = al_um + al_att_wheel[pos]
   atten = foxsi4_attenuator(energy_arr = energy_arr, al_um = al_um, pixelated_att = 0)      ; attenuator transmission
