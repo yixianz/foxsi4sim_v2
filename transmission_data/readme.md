@@ -1,0 +1,1 @@
+This folder contains transmission data for attenuators and blankets, calculated from the corresponding material thicknesses.
