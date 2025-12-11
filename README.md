@@ -52,18 +52,23 @@ Template flare photon spectrum simulation (functions):
 Instrument response (functions):
 * `foxsi4_optics_effarea.pro`: get optics effective area
 * `foxsi4_blanketing.pro`: get blanketing transmission
-* `foxsi4_attenuator.pro`: get attenuator transmission
+* `foxsi4_obf.pro`: get optical blocking filter (OBF) transmission for Position 1
+* `foxsi4_attenuator.pro`: get attenuator transmission for CdTe detectors
+* `foxsi4_cmos_prefilter.pro`: get prefilter transmission for CMOS detectors
 * `foxsi4_deteff.pro`: get detector efficiency
 * `get_material_transmission.pro`: get transmission profile for certain thickness of material, called by foxsi4_blanketing.pro, foxsi4_attenuator.pro, and foxsi4_deteff.pro
-* `foxsi4_resp_diag.pro`: generate diagonal response from optics + blanketing + attenuator + detector combined
-* `foxsi4_resp_2d.pro`: generate 2d response matrix (off-diagonal elements are only due to energy resolution so far)
+* `foxsi4_resp_diag.pro`: generate diagonal response from optics + blanketing + filters/attenuator + detector combined
+* `foxsi4_resp_2d.pro`: generate 2d response matrix (so far off-diagonal elements only come from energy resolution)
 
 Wrapper (function):
 * `foxsi4_ct_spec.pro`: calculate count spectrum from a given photon spectrum, using foxsi4_resp_diag.pro and then convolving with a Gaussian to account for energy resolution
 
-#### More examples (procedures):
+#### More examples 
+Procedures:
 * `foxsi4_typical_flare_ctspec.pro`: calculate count spectrum for typical flares from scaling laws 
 * `foxsi4_real_85flares.pro`: calculate count spectra and count rates with real parameters for flares in Battaglia et al (2005)
 * `foxsi4_pileup_sim.pro`: simulate piled-up flare count spectra for FOXSI-4 CdTe strip detectors
 * `foxsi4_ospex_fit_example`: demonstrate how to use OSPEX to reconstruct photon spectrum from simulated FOXSI-4 count spectrum
 
+Inside `/examples` folder:
+More procedures for generating various figures, including those in Yixian’s dissertation and in conference presentations.
